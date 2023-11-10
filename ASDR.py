@@ -1,30 +1,65 @@
-simbolos = {'LESS': '<', 'LESS-EQUAL': '<=', 'GREATER': '>', 'GREATER_EQUAL': '>=', 'BANG': '!', 'BANG_EQUAL': '!=',
-            'EQUAL': '=', 'EQUAL_EQUAL': '==', 'PLUS': '+', 'MINUS': '-', 'STAR': '*', 'SLASH': '/', 'LEFT_BRACE': '{',
-            'RIGHT_BRACE': '}', 'LEFT_PAREN': '(', 'RIGHT_PAREN': ')', 'COMMA': ',', 'DOT': '.', 'SEMICOLON': ';'}
-simbolos_values = simbolos.values()
-reservadas = {'AND': 'and', 'ELSE': 'else', 'FALSE': 'false', 'FOR': 'for', 'FUN': 'fun', 'IF': 'if', 'NULL': 'null',
-              'OR': 'or', 'PRINT': 'print', 'RETURN': 'return', 'TRUE': 'true', 'VAR': 'var', 'WHILE': 'while'}
-reservadas_values = reservadas.values()
+class TipoToken:
+    #Tokens de un solo caracter
+    LEFT_PAREN = 'LEFT_PAREN'
+    RIGHT_PAREN = 'RIGHT_PAREN'
+    LEFT_BRACE = 'LEFT_BRACE'
+    RIGHT_BRACE = 'RIGHT_BRACE'
+    COMMA = 'COMMA'
+    DOT = 'DOT'
+    MINUS = 'MINUS'
+    PLUS = 'PLUS'
+    SEMICOLON = 'SEMICOLON'
+    SLASH = 'SLASH'
+    STAR = 'STAR'
 
-tokens=['var', 'nombre', '=', '"Nombre"', ';', 'var', 'apellido1', '=', '"Apellido"', ';', 'print', 'nombre', '+', '" "', '+', 'apellido1', ';']
+    #Tokens de uno o dos caracteres
+    BANG = 'BANG'
+    BANG_EQUAL = 'BANG_EQUAL'
+    EQUAL = 'EQUAL'
+    EQUAL_EQUAL = 'EQUAL_EQUAL'
+    GREATER = 'GREATER'
+    GREATER_EQUAL = 'GREATER_EQUAL'
+    LESS = 'LESS'
+    LESS_EQUAL = 'LESS_EQUAL'
 
-preanalisis = 'perro55'
-print(preanalisis.isalnum())
+    #Literales
 
+    IDENTIFIER = 'IDENTIFIER'
+    STRING = 'STRING'
+    NUMBER = 'NUMBER'
 
+    #Palabras clave
+    AND = 'AND'
+    ELSE = 'ELSE'
+    FALSE = 'FALSE'
+    FUN = 'FUN'
+    FOR = 'FOR'
+    IF = 'IF'
+    NULL = 'NULL'
+    OR = 'OR'
+    PRINT = 'PRINT'
+    RETURN = 'RETURN'
+    TRUE = 'TRUE'
+    VAR = 'VAR'
+    WHILE = 'WHILE'
 
+    EOF = 'EOF'
+
+entrada = [{'tipo': 'VAR', 'lexema': 'var', 'valor': 'null'}, {'tipo': 'IDENTIFIER', 'lexema': 'nombre', 'valor': 'null'}, {'tipo': 'EQUAL', 'lexema': '=', 'valor': 'null'}, {'tipo': 'STRING', 'lexema': '"Nombre"', 'valor': 'Nombre'}, {'tipo': 'SEMICOLON', 'lexema': ';', 'valor': 'null'}, {'tipo': 'VAR', 'lexema': 'var', 'valor': 'null'}, {'tipo': 'IDENTIFIER', 'lexema': 'apellido1', 'valor': 'null'}, {'tipo': 'EQUAL', 'lexema': '=', 'valor': 'null'}, {'tipo': 'STRING', 'lexema': '"Apellido"', 'valor': 'Apellido'}, {'tipo': 'SEMICOLON', 'lexema': ';', 'valor': 'null'}, {'tipo': 'PRINT', 'lexema': 'print', 'valor': 'null'}, {'tipo': 'IDENTIFIER', 'lexema': 'nombre', 'valor': 'null'}, {'tipo': 'PLUS', 'lexema': '+', 'valor': 'null'}, {'tipo': 'STRING', 'lexema': '" "', 'valor': ' '}, {'tipo': 'PLUS', 'lexema': '+', 'valor': 'null'}, {'tipo': 'IDENTIFIER', 'lexema': 'apellido1', 'valor': 'null'}, {'tipo': 'SEMICOLON', 'lexema': ';', 'valor': 'null'}]
 class ASDR:
-    global tokens
+
     def __init__(self, tokens):
-        self.i = 0
+        self.i = 10
         self.hayErrores = False
         self.tokens = tokens
         self.preanalisis = self.tokens[self.i]
+        if self.preanalisis['tipo'] == TipoToken.PRINT:
+            print(self.preanalisis)
 
     def parse(self):
         self.program()
 
-        if len(self.preanalisis) == len(tokens) and self.hayErrores==False:
+        if self.preanalisis['tipo'] == TipoToken.EOF and not self.hayErrores:
             print("Consulta correcta.")
             return True
         else:
@@ -41,22 +76,22 @@ class ASDR:
     # DECLARATION -> Ɛ
     def declaration(self):
 
-        if self.preanalisis == reservadas.get('FUN'):
+        if self.preanalisis['tipo'] == TipoToken.FUN:
             self.fun_decl()
             self.declaration()
 
-        elif self.preanalisis == reservadas.get('VAR'):
+        elif self.preanalisis['tipo'] == TipoToken.VAR:
             self.var_decl()
             self.declaration()
 
-        elif self.preanalisis == simbolos.get('BANG') or self.preanalisis == simbolos.get('MINUS') or self.preanalisis == reservadas.get('TRUE') or self.preanalisis == reservadas.get('FALSE') or self.preanalisis == reservadas.get('NULL') or self.preanalisis.isnumber() == True or self.preanalisis.isalnum() == True or (self.preanalisis not in simbolos_values and self.preanalisis not in reservadas_values) or self.preanalisis == simbolos.get('LEFT_PAREN') or self.preanalisis == reservadas.get('FOR') or self.preanalisis == reservadas.get('IF') or self.preanalisis == reservadas.get('PRINT') or self.preanalisis == reservadas.get('RETURN') or self.preanalisis == reservadas.get('WHILE') or self.preanalisis == simbolos.get('LEFT_BRACE'):
+        elif self.preanalisis['tipo'] == TipoToken.BANG or self.preanalisis['tipo'] == TipoToken.MINUS or self.preanalisis['tipo'] == TipoToken.TRUE or self.preanalisis['tipo'] == TipoToken.FALSE or self.preanalisis['tipo'] == TipoToken.NULL or self.preanalisis['tipo']==TipoToken.NUMBER or self.preanalisis['tipo']==TipoToken.STRING or self.preanalisis['tipo']==TipoToken.IDENTIFIER or self.preanalisis['tipo'] == TipoToken.LEFT_PAREN or self.preanalisis['tipo'] == TipoToken.FOR or self.preanalisis['tipo'] == TipoToken.IF or self.preanalisis['tipo'] == TipoToken.PRINT or self.preanalisis['tipo'] == TipoToken.RETURN or self.preanalisis['tipo'] == TipoToken.WHILE or self.preanalisis['tipo'] == TipoToken.LEFT_BRACE:
             self.statement()
             self.declaration()
 
     # FUN_DECL -> fun FUNCTION
     def fun_decl(self):
-        if self.preanalisis == reservadas.get('FUN'):
-            self.coincidir(reservadas.get('FUN'))
+        if self.preanalisis['tipo'] == TipoToken.FUN:
+            self.coincidir(TipoToken.FUN)
             self.function()
         else:
             self.hayErrores = True
@@ -64,11 +99,11 @@ class ASDR:
 
     # VAR_DECL -> var id VAR_INIT;
     def var_decl(self):
-        if self.preanalisis == reservadas.get('VAR'):
-            self.coincidir(reservadas.get('VAR'))
-            self.coincidir() #Checar
+        if self.preanalisis['tipo'] == TipoToken.VAR:
+            self.coincidir(TipoToken.VAR)
+            self.coincidir(TipoToken.IDENTIFIER) #Checar
             self.var_init()
-            self.coincidir(simbolos.get('SEMICOLON'))
+            self.coincidir(TipoToken.SEMICOLON)
         else:
             self.hayErrores = True
             print("Error. Se esparaba la palabra reservada var")
@@ -76,8 +111,8 @@ class ASDR:
     # VAR_INIT -> = EXPRESSION
     # VAR_INIT -> Ɛ
     def var_init(self):
-        if self.preanalisis == simbolos.get('EQUAL'):
-            self.coincidir(simbolos.get('EQUAL'))
+        if self.preanalisis['tipo'] == TipoToken.EQUAL:
+            self.coincidir(TipoToken.EQUAL)
             self.expression()
 
     # STATEMENT -> EXPR_STMT
@@ -88,22 +123,25 @@ class ASDR:
     # STATEMENT -> WHILE_STMT
     # STATEMENT -> BLOCK
     def statement(self):
-        if self.preanalisis == simbolos.get('BANG') or self.preanalisis == simbolos.get('MINUS') or self.preanalisis == reservadas.get('TRUE') or self.preanalisis == reservadas.get('FALSE') or self.preanalisis == reservadas.get('NULL') or self.preanalisis.isnumber() == True or self.preanalisis.isalnum() == True or (self.preanalisis not in simbolos_values and self.preanalisis not in reservadas_values) or self.preanalisis == simbolos.get('LEFT_PAREN'):
+        if self.preanalisis['tipo'] == TipoToken.BANG or self.preanalisis['tipo'] == TipoToken.MINUS or self.preanalisis['tipo'] == TipoToken.TRUE or self.preanalisis['tipo'] == TipoToken.FALSE or self.preanalisis['tipo'] == TipoToken.NULL or self.preanalisis['tipo']==TipoToken.NUMBER or self.preanalisis['tipo']==TipoToken.STRING or self.preanalisis['tipo']==TipoToken.IDENTIFIER or self.preanalisis['tipo'] == TipoToken.LEFT_PAREN:
             self.expr_stmt()
-        elif self.preanalisis == reservadas.get('FOR'):
+        elif self.preanalisis['tipo'] == TipoToken.FOR:
             self.for_stmt()
-        elif self.preanalisis == reservadas.get('IF'):
+        elif self.preanalisis['tipo'] == TipoToken.IF:
             self.if_stmt()
-        elif self.preanalisis == reservadas.get('PRINT'):
+        elif self.preanalisis['tipo'] == TipoToken.PRINT:
             self.print_stmt()
-        elif self.preanalisis == reservadas.get('RETURN'):
+        elif self.preanalisis['tipo'] == TipoToken.RETURN:
             self.return_stmt()
-        elif self.preanalisis == reservadas.get('WHILE'):
+        elif self.preanalisis['tipo'] == TipoToken.WHILE:
             self.while_stmt()
-        elif self.preanalisis == simbolos.get('LEFT_BRACE'):
+        elif self.preanalisis['tipo'] == TipoToken.LEFT_BRACE:
             self.block()
         else:
             self.hayErrores = True
             print('Error.')
+
+
+analizador=ASDR(entrada)
 
 
