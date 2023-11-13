@@ -46,7 +46,6 @@ class TipoToken:
 
     EOF = 'EOF'
 
-entrada = [{'tipo': 'VAR', 'lexema': 'var', 'valor': 'null'}, {'tipo': 'IDENTIFIER', 'lexema': 'nombre', 'valor': 'null'}, {'tipo': 'EQUAL', 'lexema': '=', 'valor': 'null'}, {'tipo': 'STRING', 'lexema': '"Nombre"', 'valor': 'Nombre'}, {'tipo': 'SEMICOLON', 'lexema': ';', 'valor': 'null'}, {'tipo': 'VAR', 'lexema': 'var', 'valor': 'null'}, {'tipo': 'IDENTIFIER', 'lexema': 'apellido1', 'valor': 'null'}, {'tipo': 'EQUAL', 'lexema': '=', 'valor': 'null'}, {'tipo': 'STRING', 'lexema': '"Apellido"', 'valor': 'Apellido'}, {'tipo': 'SEMICOLON', 'lexema': ';', 'valor': 'null'}, {'tipo': 'PRINT', 'lexema': 'print', 'valor': 'null'}, {'tipo': 'IDENTIFIER', 'lexema': 'nombre', 'valor': 'null'}, {'tipo': 'PLUS', 'lexema': '+', 'valor': 'null'}, {'tipo': 'STRING', 'lexema': '" "', 'valor': ' '}, {'tipo': 'PLUS', 'lexema': '+', 'valor': 'null'}, {'tipo': 'IDENTIFIER', 'lexema': 'apellido1', 'valor': 'null'}, {'tipo': 'SEMICOLON', 'lexema': ';', 'valor': 'null'}, {'tipo': 'EOF', 'lexema': '', 'valor': 'null'}]
 class ASDR:
 
     def __init__(self, tokens):
@@ -212,7 +211,7 @@ class ASDR:
 
     #ELSE_STATEMENT -> else STATEMENT
     #ELSE_STATEMENT -> Ɛ
-    def else_statement(self):
+    def else_stmt(self):
         if self.preanalisis['tipo'] == TipoToken.ELSE:
             self.coincidir(TipoToken.ELSE)
             self.statement()
@@ -550,7 +549,7 @@ class ASDR:
             self.preanalisis = self.tokens[self.i]
         else:
             self.hayErrores = True
-            print("ERROR")
+            print("Error.")
 
 
 
@@ -559,9 +558,5 @@ class ASDR:
 
 
 
-
-
-analizador=ASDR(entrada)
-analizador.parse()
 
 
