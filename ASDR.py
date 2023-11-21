@@ -471,6 +471,8 @@ class ASDR:
             self.coincidir(TipoToken.NULL)
         elif self.preanalisis['tipo'] == TipoToken.NUMBER:
             self.coincidir(TipoToken.NUMBER)
+            numero = self.previous()
+            print(numero['valor'])
         elif self.preanalisis['tipo'] == TipoToken.STRING:
             self.coincidir(TipoToken.STRING)
         elif self.preanalisis['tipo'] == TipoToken.IDENTIFIER:
@@ -550,6 +552,12 @@ class ASDR:
         else:
             self.hayErrores = True
             print("Error.")
+
+    def previous(self):
+        j = self.i - 1
+        last = self.tokens[j]
+
+        return last
 
 
 
