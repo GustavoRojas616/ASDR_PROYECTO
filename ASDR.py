@@ -1,4 +1,17 @@
 import sys
+class ExprBinary:
+    def __init__(self, left, operator, right):
+        self.left = left
+        self.operator = operator
+        self.right = right
+
+class ExprLiteral:
+    def __int__(self, value):
+        self.value = value
+
+class ExprVariable:
+    def __int__(self, name):
+        self.name = name
 class TipoToken:
     #Tokens de un solo caracter
     LEFT_PAREN = 'LEFT_PAREN'
@@ -465,18 +478,28 @@ class ASDR:
     def primary(self):
         if self.preanalisis['tipo'] == TipoToken.TRUE:
             self.coincidir(TipoToken.TRUE)
+            return ExprLiteral.__int__(self, True)
         elif self.preanalisis['tipo'] == TipoToken.FALSE:
             self.coincidir(TipoToken.FALSE)
+            return ExprLiteral.__int__(self, False)
         elif self.preanalisis['tipo'] == TipoToken.NULL:
             self.coincidir(TipoToken.NULL)
+            return ExprLiteral.__int__(self, None)
         elif self.preanalisis['tipo'] == TipoToken.NUMBER:
             self.coincidir(TipoToken.NUMBER)
             numero = self.previous()
             print(numero['valor'])
+            return ExprLiteral.__int__(self, numero['valor'])
         elif self.preanalisis['tipo'] == TipoToken.STRING:
             self.coincidir(TipoToken.STRING)
+            string = self.previous()
+            print(string['valor'])
+            return ExprLiteral.__int__(self, string['valor'])
         elif self.preanalisis['tipo'] == TipoToken.IDENTIFIER:
             self.coincidir(TipoToken.IDENTIFIER)
+            id = self.previous()
+            print(id['lexema'])
+            return ExprVariable.__int__(self, id)
         elif self.preanalisis['tipo'] == TipoToken.LEFT_PAREN:
             self.coincidir(TipoToken.LEFT_PAREN)
             self.expression()
