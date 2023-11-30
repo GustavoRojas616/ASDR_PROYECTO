@@ -1,17 +1,114 @@
 import sys
+
+class ExprAssign:
+    def __init__(self, name, value):
+        self.name = name
+        self.value = value
+
 class ExprBinary:
     def __init__(self, left, operator, right):
         self.left = left
         self.operator = operator
         self.right = right
 
+class ExprCallFunction:
+    def __init__(self, callee, arguments):
+        self.callee = callee
+        self.arguments = arguments
+
+#class Expression:  (abstract class (?))
+#    def __init__(self):
+#        pass
+
+class ExprGet:
+    def __init__(self, object, name):
+        self.object = object
+        self.name = name
+
+class ExprGrouping:
+    def __init__(self, expression):
+        self.expression = expression
+
 class ExprLiteral:
-    def __int__(self, value):
+    def __init__(self, value):
         self.value = value
 
-class ExprVariable:
-    def __int__(self, name):
+class ExprLogical:
+    def __init__(self, left, operator, right):
+        self.left = left
+        self.operator = operator
+        self.right = right
+
+class ExprSet:
+    def __init__(self, object, name, value):
+        self.object = object
         self.name = name
+        self.value = value
+
+class ExprSuper:
+    def __init__(self, method):
+        self.method = method
+
+class ExprThis:
+    def __init__(self):
+        pass
+
+class ExprUnary:
+    def __init__(self, operator, right):
+        self.operator = operator
+        self.right = right
+
+class ExprVariable:
+    def __init__(self, name):
+        self.name = name
+
+#class Statement:  (abstract class (?))
+#    def __init__(self):
+#        pass
+
+class StmtBlock:
+    def __init__(self, statements):
+        self.statements = statements
+
+#class StmtClass:
+#    def __init__(self, name, superclass, methods):
+#        self.name = name
+#        self.superclass = superclass
+#        self.methods = methods
+
+class StmtExpression:
+    def __init__(self, expression):
+        self.expression = expression
+
+class StmtFunction:
+    def __init__(self, name, params, body):
+        self.name = name
+        self.params = params
+        self.body = body
+
+class StmtIf:
+    def __init__(self, condition, thenBranch, elseBranch):
+        self.condition = condition
+        self.thenBranch = thenBranch
+        self.elseBranch = elseBranch
+
+class StmtLoop:
+    def __init__(self, condition, body):
+        self.condition = condition
+        self.body = body
+
+class StmtPrint:
+    def __init__(self, expression):
+        self.expression = expression
+
+class StmtReturn:
+    def __init__(self, value):
+        self.value = value
+
+class StmtVar:
+    def __init__(self, name, initializer):
+        self.name = name
+        self.initializer = initializer
 class TipoToken:
     #Tokens de un solo caracter
     LEFT_PAREN = 'LEFT_PAREN'
@@ -289,58 +386,67 @@ class ASDR:
     #ASSIGNMENT -> LOGIC_OR ASSIGNMENT_OPC
     def assignment(self):
         if self.preanalisis['tipo'] == TipoToken.BANG or self.preanalisis['tipo'] == TipoToken.MINUS or self.preanalisis['tipo'] == TipoToken.TRUE or self.preanalisis['tipo'] == TipoToken.FALSE or self.preanalisis['tipo'] == TipoToken.NULL or self.preanalisis['tipo']==TipoToken.NUMBER or self.preanalisis['tipo']==TipoToken.STRING or self.preanalisis['tipo']==TipoToken.IDENTIFIER or self.preanalisis['tipo'] == TipoToken.LEFT_PAREN:
-            self.logic_or()
-            self.assignment_opc()
+            name = self.logic_or()
+            name = self.assignment_opc(name)
+            return name
         else:
             self.hayErrores = True
             print("Error.")
 
     #ASSIGNMENT_OPC -> = EXPRESSION
     #ASSIGNMENT_OPC -> Ɛ
-    def assignment_opc(self):
+    def assignment_opc(self, name):
         if self.preanalisis['tipo'] == TipoToken.EQUAL:
             self.coincidir(TipoToken.EQUAL)
-            self.expression()
+            value = self.expression()
+            ExprAssign(name, value)
 
     #LOGIC_OR -> LOGIC_AND LOGIC_OR_2
     def logic_or(self):
         if self.preanalisis['tipo'] == TipoToken.BANG or self.preanalisis['tipo'] == TipoToken.MINUS or self.preanalisis['tipo'] == TipoToken.TRUE or self.preanalisis['tipo'] == TipoToken.FALSE or self.preanalisis['tipo'] == TipoToken.NULL or self.preanalisis['tipo']==TipoToken.NUMBER or self.preanalisis['tipo']==TipoToken.STRING or self.preanalisis['tipo']==TipoToken.IDENTIFIER or self.preanalisis['tipo'] == TipoToken.LEFT_PAREN:
-            self.logic_and()
-            self.logic_or_2()
+            expr = self.logic_and()
+            expr = self.logic_or_2(expr)
+            return expr
         else:
             self.hayErrores = True
             print("Error, se esperaba una expresion de estado.")
 
     #LOGIC_OR_2 -> or LOGIC_AND LOGIC_OR_2
     #LOGIC_OR_2 -> Ɛ
-    def logic_or_2(self):
+    def logic_or_2(self, expr):
         if self.preanalisis['tipo'] == TipoToken.OR:
             self.coincidir(TipoToken.OR)
-            self.logic_and()
-            self.logic_or_2()
+            operador = self.previous()
+            expr2 = self.logic_and()
+            expl = ExprLogical(expr, operador, expr2)
+            return self.logic_or_2(expl)
 
     #LOGIC_AND -> EQUALITY LOGIC_AND_2
     def logic_and(self):
         if self.preanalisis['tipo'] == TipoToken.BANG or self.preanalisis['tipo'] == TipoToken.MINUS or self.preanalisis['tipo'] == TipoToken.TRUE or self.preanalisis['tipo'] == TipoToken.FALSE or self.preanalisis['tipo'] == TipoToken.NULL or self.preanalisis['tipo']==TipoToken.NUMBER or self.preanalisis['tipo']==TipoToken.STRING or self.preanalisis['tipo']==TipoToken.IDENTIFIER or self.preanalisis['tipo'] == TipoToken.LEFT_PAREN:
-            self.equality()
-            self.logic_and_2()
+            expr = self.equality()
+            expr = self.logic_and_2(expr)
+            return expr
         else:
             self.hayErrores = True
             print("Error, se esperaba una expresion de estado.")
 
     #LOGIC_AND_2 -> and EQUALITY LOGIC_AND_2
     #LOGIC_AND_2 -> Ɛ
-    def logic_and_2(self):
+    def logic_and_2(self, expr):
         if self.preanalisis['tipo'] == TipoToken.AND:
             self.coincidir(TipoToken.AND)
-            self.equality()
-            self.logic_and_2()
+            operador = self.previous()
+            expr2 = self.equality()
+            expl = ExprLogical(expr, operador, expr2)
+            return self.logic_and_2(expl)
 
     #EQUALITY -> COMPARISON EQUALITY_2
     def equality(self):
         if self.preanalisis['tipo'] == TipoToken.BANG or self.preanalisis['tipo'] == TipoToken.MINUS or self.preanalisis['tipo'] == TipoToken.TRUE or self.preanalisis['tipo'] == TipoToken.FALSE or self.preanalisis['tipo'] == TipoToken.NULL or self.preanalisis['tipo']==TipoToken.NUMBER or self.preanalisis['tipo']==TipoToken.STRING or self.preanalisis['tipo']==TipoToken.IDENTIFIER or self.preanalisis['tipo'] == TipoToken.LEFT_PAREN:
-            self.comparison()
-            self.equality_2()
+            expr = self.comparison()
+            expr = self.equality_2(expr)
+            return expr
         else:
             self.hayErrores = True
             print("Error, se esperaba una expresion de estado.")
@@ -348,21 +454,26 @@ class ASDR:
     #EQUALITY_2 -> != COMPARISON EQUALITY_2
     #EQUALITY_2 -> == COMPARISON EQUALITY_2
     #EQUALITY_2 -> Ɛ
-    def equality_2(self):
+    def equality_2(self, expr):
         if self.preanalisis['tipo'] == TipoToken.BANG_EQUAL:
             self.coincidir(TipoToken.BANG_EQUAL)
-            self.comparison()
-            self.equality_2()
+            operador = self.previous()
+            expr2 = self.comparison()
+            expb = ExprBinary(expr, operador, expr2)
+            return self.equality_2(expb)
         elif self.preanalisis['tipo'] == TipoToken.EQUAL_EQUAL:
             self.coincidir(TipoToken.EQUAL_EQUAL)
-            self.comparison()
-            self.equality_2()
+            operador = self.previous()
+            expr2 = self.comparison()
+            expb = ExprBinary(expr, operador, expr2)
+            return self.equality_2(expb)
 
     #COMPARISON -> TERM COMPARISON_2
     def comparison(self):
         if self.preanalisis['tipo'] == TipoToken.BANG or self.preanalisis['tipo'] == TipoToken.MINUS or self.preanalisis['tipo'] == TipoToken.TRUE or self.preanalisis['tipo'] == TipoToken.FALSE or self.preanalisis['tipo'] == TipoToken.NULL or self.preanalisis['tipo']==TipoToken.NUMBER or self.preanalisis['tipo']==TipoToken.STRING or self.preanalisis['tipo']==TipoToken.IDENTIFIER or self.preanalisis['tipo'] == TipoToken.LEFT_PAREN:
-            self.term()
-            self.comparison_2()
+            expr = self.term()
+            expr = self.comparison_2(expr)
+            return expr
         else:
             self.hayErrores = True
             print("Error, se esperaba una expresion de estado.")
@@ -372,29 +483,38 @@ class ASDR:
     #COMPARISON_2 -> < TERM COMPARISON_2
     #COMPARISON_2 -> <= TERM COMPARISON_2
     #COMPARISON_2 -> Ɛ
-    def comparison_2(self):
+    def comparison_2(self, expr):
         if self.preanalisis['tipo'] == TipoToken.GREATER:
             self.coincidir(TipoToken.GREATER)
-            self.term()
-            self.comparison_2()
+            operador = self.previous()
+            expr2 = self.term()
+            expb = ExprBinary(expr, operador, expr2)
+            return self.comparison_2(expb)
         elif self.preanalisis['tipo'] == TipoToken.GREATER_EQUAL:
             self.coincidir(TipoToken.GREATER_EQUAL)
-            self.term()
-            self.comparison_2()
+            operador = self.previous()
+            expr2 = self.term()
+            expb = ExprBinary(expr, operador, expr2)
+            return self.comparison_2(expb)
         elif self.preanalisis['tipo'] == TipoToken.LESS:
             self.coincidir(TipoToken.LESS)
-            self.term()
-            self.comparison_2()
+            operador = self.previous()
+            expr2 = self.term()
+            expb = ExprBinary(expr, operador, expr2)
+            return self.comparison_2(expb)
         elif self.preanalisis['tipo'] == TipoToken.LESS_EQUAL:
             self.coincidir(TipoToken.LESS_EQUAL)
-            self.term()
-            self.comparison_2()
+            operador = self.previous()
+            expr2 = self.term()
+            expb =ExprBinary(expr, operador, expr2)
+            return self.comparison_2(expb)
 
     #TERM -> FACTOR TERM_2
     def term(self):
         if self.preanalisis['tipo'] == TipoToken.BANG or self.preanalisis['tipo'] == TipoToken.MINUS or self.preanalisis['tipo'] == TipoToken.TRUE or self.preanalisis['tipo'] == TipoToken.FALSE or self.preanalisis['tipo'] == TipoToken.NULL or self.preanalisis['tipo']==TipoToken.NUMBER or self.preanalisis['tipo']==TipoToken.STRING or self.preanalisis['tipo']==TipoToken.IDENTIFIER or self.preanalisis['tipo'] == TipoToken.LEFT_PAREN:
-            self.factor()
-            self.term_2()
+            expr = self.factor()
+            expr = self.term_2(expr)
+            return expr
         else:
             self.hayErrores = True
             print("Error, se esperaba una expresion de estado.")
@@ -402,21 +522,26 @@ class ASDR:
     #TERM_2 -> - FACTOR TERM_2
     #TERM_2 -> + FACTOR TERM_2
     #TERM_2 -> Ɛ
-    def term_2(self):
+    def term_2(self, expr):
         if self.preanalisis['tipo'] == TipoToken.MINUS:
             self.coincidir(TipoToken.MINUS)
-            self.factor()
-            self.term_2()
+            operador = self.previous()
+            expr2 = self.factor()
+            expb = ExprBinary(expr, operador, expr2)
+            return self.term_2(expb)
         elif self.preanalisis['tipo'] == TipoToken.PLUS:
             self.coincidir(TipoToken.PLUS)
-            self.factor()
-            self.term_2()
+            operador = self.previous()
+            expr2 = self.factor()
+            expb = ExprBinary(expr, operador, expr2)
+            return self.term_2(expb)
 
     #FACTOR -> UNARY FACTOR_2
     def factor(self):
         if self.preanalisis['tipo'] == TipoToken.BANG or self.preanalisis['tipo'] == TipoToken.MINUS or self.preanalisis['tipo'] == TipoToken.TRUE or self.preanalisis['tipo'] == TipoToken.FALSE or self.preanalisis['tipo'] == TipoToken.NULL or self.preanalisis['tipo']==TipoToken.NUMBER or self.preanalisis['tipo']==TipoToken.STRING or self.preanalisis['tipo']==TipoToken.IDENTIFIER or self.preanalisis['tipo'] == TipoToken.LEFT_PAREN:
-            self.unary()
-            self.factor_2()
+            expr = self.unary()
+            expr = self.factor_2(expr)
+            return expr
         else:
             self.hayErrores = True
             print("Error, se esperaba una expresion de estado.")
@@ -424,15 +549,20 @@ class ASDR:
     #FACTOR_2 -> / UNARY FACTOR_2
     #FACTOR_2 -> * UNARY FACTOR_2
     #FACTOR_2 -> Ɛ
-    def factor_2(self):
+    def factor_2(self, expr):
         if self.preanalisis['tipo'] == TipoToken.SLASH:
             self.coincidir(TipoToken.SLASH)
-            self.unary()
-            self.factor_2()
+            operador = self.previous()
+            expr2 = self.unary()
+            expb = ExprBinary(expr, operador, expr2)
+            return self.factor_2(expb)
         elif self.preanalisis['tipo'] == TipoToken.STAR:
             self.coincidir(TipoToken.STAR)
-            self.unary()
-            self.factor_2()
+            operador = self.previous()
+            expr2 = self.unary()
+            expb = ExprBinary(expr, operador, expr2)
+            return self.factor_2(expb)
+        return expr
 
     #UNARY -> ! UNARY
     #UNARY -> - UNARY
@@ -440,12 +570,16 @@ class ASDR:
     def unary(self):
         if self.preanalisis['tipo'] == TipoToken.BANG:
             self.coincidir(TipoToken.BANG)
-            self.unary()
+            operador = self.previous()
+            expr = self.unary()
+            return ExprUnary(operador, expr)
         elif self.preanalisis['tipo'] == TipoToken.MINUS:
             self.coincidir(TipoToken.MINUS)
-            self.unary()
+            operador = self.previous()
+            expr = self.unary()
+            return ExprUnary(operador, expr)
         elif self.preanalisis['tipo'] == TipoToken.TRUE or self.preanalisis['tipo'] == TipoToken.FALSE or self.preanalisis['tipo'] == TipoToken.NULL or self.preanalisis['tipo']==TipoToken.NUMBER or self.preanalisis['tipo']==TipoToken.STRING or self.preanalisis['tipo']==TipoToken.IDENTIFIER or self.preanalisis['tipo'] == TipoToken.LEFT_PAREN:
-            self.call()
+            return self.call()
         else:
             self.hayErrores = True
             print("Error, se esperaba una expresion de estado.")
@@ -453,20 +587,24 @@ class ASDR:
     #CALL -> PRIMARY CALL_2
     def call(self):
         if self.preanalisis['tipo'] == TipoToken.TRUE or self.preanalisis['tipo'] == TipoToken.FALSE or self.preanalisis['tipo'] == TipoToken.NULL or self.preanalisis['tipo']==TipoToken.NUMBER or self.preanalisis['tipo']==TipoToken.STRING or self.preanalisis['tipo']==TipoToken.IDENTIFIER or self.preanalisis['tipo'] == TipoToken.LEFT_PAREN:
-            self.primary()
-            self.call_2()
+            expr = self.primary()
+            expr = self.call_2(expr)
+            return expr
         else:
             self.hayErrores = True
             print("Error, se esperaba una expresion de estado.")
 
     #CALL_2 -> (ARGUMENTS_OPC) CALL_2
     #CALL_2 -> Ɛ
-    def call_2(self):
+    def call_2(self, expr):
         if self.preanalisis['tipo'] == TipoToken.LEFT_PAREN:
             self.coincidir(TipoToken.LEFT_PAREN)
-            self.arguments_opc()
+            lstArguments = self.arguments_opc()
             self.coincidir(TipoToken.RIGHT_PAREN)
-            self.call_2()
+            ecf = ExprCallFunction(expr, lstArguments)
+            return self.call_2(ecf)
+        return expr
+
 
     #PRIMARY -> true
     #PRIMARY -> false
@@ -478,32 +616,33 @@ class ASDR:
     def primary(self):
         if self.preanalisis['tipo'] == TipoToken.TRUE:
             self.coincidir(TipoToken.TRUE)
-            return ExprLiteral.__int__(self, True)
+            return ExprLiteral(True)
         elif self.preanalisis['tipo'] == TipoToken.FALSE:
             self.coincidir(TipoToken.FALSE)
-            return ExprLiteral.__int__(self, False)
+            return ExprLiteral(False)
         elif self.preanalisis['tipo'] == TipoToken.NULL:
             self.coincidir(TipoToken.NULL)
-            return ExprLiteral.__int__(self, None)
+            return ExprLiteral(None)
         elif self.preanalisis['tipo'] == TipoToken.NUMBER:
             self.coincidir(TipoToken.NUMBER)
             numero = self.previous()
-            print(numero['valor'])
-            return ExprLiteral.__int__(self, numero['valor'])
+            #print(numero['valor'])
+            return ExprLiteral(numero['valor'])
         elif self.preanalisis['tipo'] == TipoToken.STRING:
             self.coincidir(TipoToken.STRING)
             string = self.previous()
-            print(string['valor'])
-            return ExprLiteral.__int__(self, string['valor'])
+            #print(string['valor'])
+            return ExprLiteral(string['valor'])
         elif self.preanalisis['tipo'] == TipoToken.IDENTIFIER:
             self.coincidir(TipoToken.IDENTIFIER)
             id = self.previous()
-            print(id['lexema'])
-            return ExprVariable.__int__(self, id)
+            #print(id['lexema'])
+            return ExprVariable(id['lexema'])
         elif self.preanalisis['tipo'] == TipoToken.LEFT_PAREN:
             self.coincidir(TipoToken.LEFT_PAREN)
-            self.expression()
+            expr = self.expression()
             self.coincidir(TipoToken.RIGHT_PAREN)
+            return ExprGrouping(expr)
         else:
             self.hayErrores = True
             print("Error, se esperaba una expresion de estado.")
