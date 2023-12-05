@@ -5,6 +5,9 @@ class ExprAssign:
         self.name = name
         self.value = value
 
+    def __str__(self):
+        return f"ExprAssign({self.name}{self.value})"
+
 class ExprBinary:
     def __init__(self, left, operator, right):
         self.left = left
@@ -40,7 +43,7 @@ class ExprLiteral:
         self.value = value
 
     def __str__(self):
-        return f"{self.value}"
+        return f"ExprLiteral({self.value})"
 
 class ExprLogical:
     def __init__(self, left, operator, right):
@@ -70,7 +73,8 @@ class ExprUnary:
 class ExprVariable:
     def __init__(self, name):
         self.name = name
-
+    def __str__(self):
+        return f"ExprVariable({self.name})"
 #class Statement:  (abstract class (?))
 #    def __init__(self):
 #        pass
@@ -78,6 +82,9 @@ class ExprVariable:
 class StmtBlock:
     def __init__(self, statements):
         self.statements = statements
+
+    def __str__(self):
+        return f"StmtBlock({self.statements})"
 
 #class StmtClass:
 #    def __init__(self, name, superclass, methods):
@@ -108,10 +115,14 @@ class StmtLoop:
     def __init__(self, condition, body):
         self.condition = condition
         self.body = body
-
+    def __str__(self):
+        return f"StmtLoop({self.condition}{self.body})"
 class StmtPrint:
     def __init__(self, expression):
         self.expression = expression
+
+    def __str__(self):
+        return f"StmtPrint {self.expression}"
 
 class StmtReturn:
     def __init__(self, value):
@@ -121,6 +132,9 @@ class StmtVar:
     def __init__(self, name, initializer):
         self.name = name
         self.initializer = initializer
+
+    def __str__(self):
+        return f"StmtVar({self.name}{self.initializer})"
 class TipoToken:
     #Tokens de un solo caracter
     LEFT_PAREN = 'LEFT_PAREN'
@@ -206,8 +220,8 @@ class ASDR:
             self.declaration()
 
         elif self.preanalisis['tipo'] == TipoToken.BANG or self.preanalisis['tipo'] == TipoToken.MINUS or self.preanalisis['tipo'] == TipoToken.TRUE or self.preanalisis['tipo'] == TipoToken.FALSE or self.preanalisis['tipo'] == TipoToken.NULL or self.preanalisis['tipo']==TipoToken.NUMBER or self.preanalisis['tipo']==TipoToken.STRING or self.preanalisis['tipo']==TipoToken.IDENTIFIER or self.preanalisis['tipo'] == TipoToken.LEFT_PAREN or self.preanalisis['tipo'] == TipoToken.FOR or self.preanalisis['tipo'] == TipoToken.IF or self.preanalisis['tipo'] == TipoToken.PRINT or self.preanalisis['tipo'] == TipoToken.RETURN or self.preanalisis['tipo'] == TipoToken.WHILE or self.preanalisis['tipo'] == TipoToken.LEFT_BRACE:
-            self.statement()
-            self.declaration()
+            return self.statement()
+            return self.declaration()
 
     # FUN_DECL -> fun FUNCTION
     def fun_decl(self):
@@ -224,7 +238,9 @@ class ASDR:
         if self.preanalisis['tipo'] == TipoToken.VAR:
             self.coincidir(TipoToken.VAR)
             name = self.coincidir(TipoToken.IDENTIFIER) #Checar
-            name = self.var_init(name)
+            name = self.previous()
+            name = self.var_init(name['lexema'])
+            print(name)
             self.coincidir(TipoToken.SEMICOLON)
             return name
         else:
@@ -283,11 +299,16 @@ class ASDR:
         if self.preanalisis['tipo'] == TipoToken.FOR:
             self.coincidir(TipoToken.FOR)
             self.coincidir(TipoToken.LEFT_PAREN)
-            self.for_stmt_1()
-            self.for_stmt_2()
-            self.for_stmt_3()
+            condition = self.for_stmt_1()
+            condition2 = self.for_stmt_2()
+            condition3 = self.for_stmt_3()
+            cond = str(condition) + str(condition2) + str(condition3)
+            print(cond)
             self.coincidir(TipoToken.RIGHT_PAREN)
-            self.statement()
+            body = self.statement()
+            stmtl = StmtLoop(cond, body)
+            print(stmtl)
+            return stmtl
         else:
             self.hayErrores = True
             print("Error, se esperaba la palabra reservada for")
@@ -297,11 +318,13 @@ class ASDR:
     # FOR_STMT_1 -> ;
     def for_stmt_1(self):
         if self.preanalisis['tipo'] == TipoToken.VAR:
-            self.var_decl()
+            return self.var_decl()
         elif self.preanalisis['tipo'] == TipoToken.BANG or self.preanalisis['tipo'] == TipoToken.MINUS or self.preanalisis['tipo'] == TipoToken.TRUE or self.preanalisis['tipo'] == TipoToken.FALSE or self.preanalisis['tipo'] == TipoToken.NULL or self.preanalisis['tipo']==TipoToken.NUMBER or self.preanalisis['tipo']==TipoToken.STRING or self.preanalisis['tipo']==TipoToken.IDENTIFIER or self.preanalisis['tipo'] == TipoToken.LEFT_PAREN:
-            self.expr_stmt()
+            return self.expr_stmt()
         elif self.preanalisis['tipo'] == TipoToken.SEMICOLON:
             self.coincidir(TipoToken.SEMICOLON)
+            pc = self.previous()
+            return pc['lexema']
         else:
             self.hayErrores = True
             print("Error, se esparaba la palabra reservada var, declaracion de estado o punto y coma")
@@ -310,10 +333,14 @@ class ASDR:
     # FOR_STMT_2 -> ;
     def for_stmt_2(self):
         if self.preanalisis['tipo'] == TipoToken.BANG or self.preanalisis['tipo'] == TipoToken.MINUS or self.preanalisis['tipo'] == TipoToken.TRUE or self.preanalisis['tipo'] == TipoToken.FALSE or self.preanalisis['tipo'] == TipoToken.NULL or self.preanalisis['tipo']==TipoToken.NUMBER or self.preanalisis['tipo']==TipoToken.STRING or self.preanalisis['tipo']==TipoToken.IDENTIFIER or self.preanalisis['tipo'] == TipoToken.LEFT_PAREN:
-            self.expression()
+            exp = self.expression()
             self.coincidir(TipoToken.SEMICOLON)
+            pc = self.previous()
+            return str(exp) + str(pc['lexema'])
         elif self.preanalisis['tipo'] == TipoToken.SEMICOLON:
             self.coincidir(TipoToken.SEMICOLON)
+            pc = self.previous()
+            return pc
         else:
             self.hayErrores = True
             print("Error, se esperaba una declaracion de estado o un punto y coma.")
@@ -322,7 +349,7 @@ class ASDR:
     #FOR_STMT_3 -> Ɛ
     def for_stmt_3(self):
         if self.preanalisis['tipo'] == TipoToken.BANG or self.preanalisis['tipo'] == TipoToken.MINUS or self.preanalisis['tipo'] == TipoToken.TRUE or self.preanalisis['tipo'] == TipoToken.FALSE or self.preanalisis['tipo'] == TipoToken.NULL or self.preanalisis['tipo']==TipoToken.NUMBER or self.preanalisis['tipo']==TipoToken.STRING or self.preanalisis['tipo']==TipoToken.IDENTIFIER or self.preanalisis['tipo'] == TipoToken.LEFT_PAREN:
-            self.expression()
+            return self.expression()
 
     #IF_STMT -> if (EXPRESSION) STATEMENT ELSE_STATEMENT
     def if_stmt(self):
@@ -356,7 +383,9 @@ class ASDR:
             self.coincidir(TipoToken.PRINT)
             expression = self.expression()
             self.coincidir(TipoToken.SEMICOLON)
-            return StmtPrint(expression)
+            stmtp = StmtPrint(expression)
+            print(stmtp)
+            return stmtp
         else:
             self.hayErrores = True
             print("Error, se esperaba la palabra reservada print.")
@@ -398,6 +427,7 @@ class ASDR:
             self.coincidir(TipoToken.LEFT_BRACE)
             declaracion = self.declaration()
             stmtb = StmtBlock(declaracion)
+            print(stmtb)
             self.coincidir(TipoToken.RIGHT_BRACE)
             return stmtb
         else:
