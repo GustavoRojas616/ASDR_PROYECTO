@@ -1,3 +1,4 @@
+#Entrega lunes en la noche
 import sys
 
 class ExprAssign:
@@ -22,6 +23,9 @@ class ExprCallFunction:
         self.callee = callee
         self.arguments = arguments
 
+    def __str__(self):
+        return f"ExprCallFunction({self.callee}{self.arguments})"
+
 #class Expression:  (abstract class (?))
 #    def __init__(self):
 #        pass
@@ -31,6 +35,8 @@ class ExprGet:
         self.object = object
         self.name = name
 
+    def __str__(self):
+        return f"ExprGet({self.object}{self.name})"
 class ExprGrouping:
     def __init__(self, expression):
         self.expression = expression
@@ -51,16 +57,22 @@ class ExprLogical:
         self.operator = operator
         self.right = right
 
+    def __str__(self):
+        return f"ExprLogical({self.left}{self.operator}{self.right})"
 class ExprSet:
     def __init__(self, object, name, value):
         self.object = object
         self.name = name
         self.value = value
 
+    def __str__(self):
+        return f"ExprSet({self.object}{self.name}{self.value})"
 class ExprSuper:
     def __init__(self, method):
         self.method = method
 
+    def __str__(self):
+        return f"ExprSuper({self.method})"
 class ExprThis:
     def __init__(self):
         pass
@@ -70,6 +82,8 @@ class ExprUnary:
         self.operator = operator
         self.right = right
 
+    def __str__(self):
+        return f"ExprUnary({self.operator}{self.right})"
 class ExprVariable:
     def __init__(self, name):
         self.name = name
@@ -96,12 +110,16 @@ class StmtExpression:
     def __init__(self, expression):
         self.expression = expression
 
+    def __str__(self):
+        return f"StmtExpression({self.expression})"
+
 class StmtFunction:
     def __init__(self, name, params, body):
         self.name = name
         self.params = params
         self.body = body
-
+    def __str__(self):
+        return f"StmtFunction({self.name}{self.params}{self.body})"
 class StmtIf:
     def __init__(self, condition, thenBranch, elseBranch):
         self.condition = condition
@@ -122,12 +140,14 @@ class StmtPrint:
         self.expression = expression
 
     def __str__(self):
-        return f"StmtPrint {self.expression}"
+        return f"StmtPrint({self.expression})"
 
 class StmtReturn:
     def __init__(self, value):
         self.value = value
 
+    def __str__(self):
+        return f"StmtReturn({self.value})"
 class StmtVar:
     def __init__(self, name, initializer):
         self.name = name
@@ -182,6 +202,7 @@ class TipoToken:
 
     EOF = 'EOF'
 
+statements = []
 class ASDR:
 
     def __init__(self, tokens):
@@ -202,26 +223,36 @@ class ASDR:
 
     # PROGRAM -> DECLARATION
     def program(self):
-        self.declaration()
+        statements = []
+        value = self.declaration(statements)
+        print(f'Aqui {value}')
 
     #Declaraciones
     # DECLARATION -> FUN_DECL DECLARATION
     # DECLARATION -> VAR_DECL DECLARATION
     # DECLARATION -> STATEMENT DECLARATION
     # DECLARATION -> Ɛ
-    def declaration(self):
+    def declaration(self, statements):
 
         if self.preanalisis['tipo'] == TipoToken.FUN:
-            self.fun_decl()
-            self.declaration()
+            fundcl = self.fun_decl()
+            statements.append(fundcl)
+            self.declaration(statements)
+            return fundcl
 
         elif self.preanalisis['tipo'] == TipoToken.VAR:
-            self.var_decl()
-            self.declaration()
+            vardcl = self.var_decl()
+            statements.append(vardcl)
+            self.declaration(statements)
+            return vardcl
 
         elif self.preanalisis['tipo'] == TipoToken.BANG or self.preanalisis['tipo'] == TipoToken.MINUS or self.preanalisis['tipo'] == TipoToken.TRUE or self.preanalisis['tipo'] == TipoToken.FALSE or self.preanalisis['tipo'] == TipoToken.NULL or self.preanalisis['tipo']==TipoToken.NUMBER or self.preanalisis['tipo']==TipoToken.STRING or self.preanalisis['tipo']==TipoToken.IDENTIFIER or self.preanalisis['tipo'] == TipoToken.LEFT_PAREN or self.preanalisis['tipo'] == TipoToken.FOR or self.preanalisis['tipo'] == TipoToken.IF or self.preanalisis['tipo'] == TipoToken.PRINT or self.preanalisis['tipo'] == TipoToken.RETURN or self.preanalisis['tipo'] == TipoToken.WHILE or self.preanalisis['tipo'] == TipoToken.LEFT_BRACE:
-            return self.statement()
-            return self.declaration()
+            stmt = self.statement()
+            statements.append(stmt)
+            self.declaration(statements)
+            print(stmt)
+            return stmt
+        return statements
 
     # FUN_DECL -> fun FUNCTION
     def fun_decl(self):
@@ -237,25 +268,26 @@ class ASDR:
     def var_decl(self):
         if self.preanalisis['tipo'] == TipoToken.VAR:
             self.coincidir(TipoToken.VAR)
-            name = self.coincidir(TipoToken.IDENTIFIER) #Checar
+            self.coincidir(TipoToken.IDENTIFIER) #Checar
             name = self.previous()
-            name = self.var_init(name['lexema'])
+            initializer = self.var_init()
             print(name)
             self.coincidir(TipoToken.SEMICOLON)
-            return name
+            pc = self.previous()
+            stmtv = StmtVar(name['lexema'], str(initializer))
+            print(stmtv)
+            return stmtv
         else:
             self.hayErrores = True
             print("Error. Se esparaba la palabra reservada var")
 
     # VAR_INIT -> = EXPRESSION
     # VAR_INIT -> Ɛ
-    def var_init(self, name):
+    def var_init(self):
         if self.preanalisis['tipo'] == TipoToken.EQUAL:
             self.coincidir(TipoToken.EQUAL)
             initializer = self.expression()
-            stmtv = StmtVar(name, initializer)
-            return stmtv
-        return name
+            return initializer
 
     #Sentencias
     # STATEMENT -> EXPR_STMT
@@ -269,7 +301,7 @@ class ASDR:
         if self.preanalisis['tipo'] == TipoToken.BANG or self.preanalisis['tipo'] == TipoToken.MINUS or self.preanalisis['tipo'] == TipoToken.TRUE or self.preanalisis['tipo'] == TipoToken.FALSE or self.preanalisis['tipo'] == TipoToken.NULL or self.preanalisis['tipo']==TipoToken.NUMBER or self.preanalisis['tipo']==TipoToken.STRING or self.preanalisis['tipo']==TipoToken.IDENTIFIER or self.preanalisis['tipo'] == TipoToken.LEFT_PAREN:
             return self.expr_stmt()
         elif self.preanalisis['tipo'] == TipoToken.FOR:
-            self.for_stmt()
+            return self.for_stmt()
         elif self.preanalisis['tipo'] == TipoToken.IF:
             return self.if_stmt()
         elif self.preanalisis['tipo'] == TipoToken.PRINT:
@@ -277,7 +309,7 @@ class ASDR:
         elif self.preanalisis['tipo'] == TipoToken.RETURN:
             return self.return_stmt()
         elif self.preanalisis['tipo'] == TipoToken.WHILE:
-            self.while_stmt()
+            return self.while_stmt()
         elif self.preanalisis['tipo'] == TipoToken.LEFT_BRACE:
             return self.block()
         else:
@@ -336,7 +368,7 @@ class ASDR:
             exp = self.expression()
             self.coincidir(TipoToken.SEMICOLON)
             pc = self.previous()
-            return str(exp) + str(pc['lexema'])
+            return str(exp)
         elif self.preanalisis['tipo'] == TipoToken.SEMICOLON:
             self.coincidir(TipoToken.SEMICOLON)
             pc = self.previous()
@@ -383,7 +415,8 @@ class ASDR:
             self.coincidir(TipoToken.PRINT)
             expression = self.expression()
             self.coincidir(TipoToken.SEMICOLON)
-            stmtp = StmtPrint(expression)
+            pc = self.previous()
+            stmtp = StmtPrint(str(expression))
             print(stmtp)
             return stmtp
         else:
@@ -403,20 +436,21 @@ class ASDR:
 
     #RETURN_EXP_OPC -> EXPRESSION
     #RETURN_EXP_OPC -> Ɛ
-    def return_exp_opc(self, value):
+    def return_exp_opc(self):
         if self.preanalisis['tipo'] == TipoToken.BANG or self.preanalisis['tipo'] == TipoToken.MINUS or self.preanalisis['tipo'] == TipoToken.TRUE or self.preanalisis['tipo'] == TipoToken.FALSE or self.preanalisis['tipo'] == TipoToken.NULL or self.preanalisis['tipo']==TipoToken.NUMBER or self.preanalisis['tipo']==TipoToken.STRING or self.preanalisis['tipo']==TipoToken.IDENTIFIER or self.preanalisis['tipo'] == TipoToken.LEFT_PAREN:
-            value = self.expression(value)
+            value = self.expression()
             return value
-        return value
 
     #WHILE_STMT -> while (EXPRESSION) STATEMENT
     def while_stmt(self):
         if self.preanalisis['tipo'] == TipoToken.WHILE:
             self.coincidir(TipoToken.WHILE)
             self.coincidir(TipoToken.LEFT_PAREN)
-            self.expression()
+            condition = self.expression()
             self.coincidir(TipoToken.RIGHT_PAREN)
-            self.statement()
+            body = self.statement()
+            stmtl = StmtLoop(condition, body)
+            return stmtl
         else:
             self.hayErrores = True
             print("Error, se esperaba la palabra reservada while.")
@@ -425,8 +459,8 @@ class ASDR:
     def block(self):
         if self.preanalisis['tipo'] == TipoToken.LEFT_BRACE:
             self.coincidir(TipoToken.LEFT_BRACE)
-            declaracion = self.declaration()
-            stmtb = StmtBlock(declaracion)
+
+            stmtb = StmtBlock(self.declaration(statements))
             print(stmtb)
             self.coincidir(TipoToken.RIGHT_BRACE)
             return stmtb
@@ -728,12 +762,13 @@ class ASDR:
     #FUNCTION -> id (PARAMETERS_OPC) BLOCK
     def function(self):
         if self.preanalisis['tipo'] == TipoToken.IDENTIFIER:
-            id = self.coincidir(TipoToken.IDENTIFIER)
+            self.coincidir(TipoToken.IDENTIFIER)
+            id = self.previous()
             self.coincidir(TipoToken.LEFT_PAREN)
             param = self.parameters_opc()
             self.coincidir(TipoToken.RIGHT_PAREN)
             body = self.block()
-            stmtf = StmtFunction(id, param, body)
+            stmtf = StmtFunction(id['lexema'], param, body)
             return stmtf
         else:
             self.hayErrores = True
@@ -750,39 +785,49 @@ class ASDR:
     #PARAMETERS_OPC -> Ɛ
     def parameters_opc(self):
         if self.preanalisis['tipo'] == TipoToken.IDENTIFIER:
-            self.parameters()
+            return self.parameters()
 
     #PARAMETERS -> id PARAMETERS_2
     def parameters(self):
         if self.preanalisis['tipo'] == TipoToken.IDENTIFIER:
             self.coincidir(TipoToken.IDENTIFIER)
-            self.parameters_2()
+            id = self.previous()
+            param2 = self.parameters_2(id['lexema'])
+            return ExprGrouping(str(param2))
         else:
             self.hayErrores = True
             print("Error, se esperaba un identificador.")
 
     #PARAMETERS_2 -> , id PARAMETERS_2
     #PARAMETERS_2 -> Ɛ
-    def parameters_2(self):
+    def parameters_2(self, id):
         if self.preanalisis['tipo'] == TipoToken.COMMA:
             self.coincidir(TipoToken.COMMA)
             self.coincidir(TipoToken.IDENTIFIER)
-            self.parameters_2()
+            id2 = self.previous()
+            param2 = self.parameters_2(str(id) + str(id2['lexema']))
+            return param2
+
+        return id
+
 
     #ARGUMENTS_OPC -> EXPRESSION ARGUMENTS
     #ARGUMENTS_OPC -> Ɛ
     def arguments_opc(self):
         if self.preanalisis['tipo'] == TipoToken.BANG or self.preanalisis['tipo'] == TipoToken.MINUS or self.preanalisis['tipo'] == TipoToken.TRUE or self.preanalisis['tipo'] == TipoToken.FALSE or self.preanalisis['tipo'] == TipoToken.NULL or self.preanalisis['tipo']==TipoToken.NUMBER or self.preanalisis['tipo']==TipoToken.STRING or self.preanalisis['tipo']==TipoToken.IDENTIFIER or self.preanalisis['tipo'] == TipoToken.LEFT_PAREN:
-            self.expression()
-            self.arguments()
+            expr = self.expression()
+            arg = self.arguments(expr)
+            return ExprGrouping(str(arg))
 
     #ARGUMENTS -> , EXPRESSION ARGUMENTS
     #ARGUMENTS -> Ɛ
-    def arguments(self):
+    def arguments(self, expr):
         if self.preanalisis['tipo'] == TipoToken.COMMA:
             self.coincidir(TipoToken.COMMA)
-            self.expression()
-            self.arguments()
+            expr2 = self.expression()
+            arg = self.arguments(expr2)
+            return str(expr) + str(arg)
+        return expr
 
     def coincidir(self, t):
         if self.hayErrores:
