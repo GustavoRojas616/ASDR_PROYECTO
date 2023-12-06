@@ -225,7 +225,7 @@ class ASDR:
     def program(self):
         statements = []
         value = self.declaration(statements)
-        print(f'Aqui {value}')
+        print(f'Aqui {value[0]}')
 
     #Declaraciones
     # DECLARATION -> FUN_DECL DECLARATION
@@ -238,20 +238,20 @@ class ASDR:
             fundcl = self.fun_decl()
             statements.append(fundcl)
             self.declaration(statements)
-            return fundcl
+            #return fundcl
 
         elif self.preanalisis['tipo'] == TipoToken.VAR:
             vardcl = self.var_decl()
             statements.append(vardcl)
             self.declaration(statements)
-            return vardcl
+            #return vardcl
 
         elif self.preanalisis['tipo'] == TipoToken.BANG or self.preanalisis['tipo'] == TipoToken.MINUS or self.preanalisis['tipo'] == TipoToken.TRUE or self.preanalisis['tipo'] == TipoToken.FALSE or self.preanalisis['tipo'] == TipoToken.NULL or self.preanalisis['tipo']==TipoToken.NUMBER or self.preanalisis['tipo']==TipoToken.STRING or self.preanalisis['tipo']==TipoToken.IDENTIFIER or self.preanalisis['tipo'] == TipoToken.LEFT_PAREN or self.preanalisis['tipo'] == TipoToken.FOR or self.preanalisis['tipo'] == TipoToken.IF or self.preanalisis['tipo'] == TipoToken.PRINT or self.preanalisis['tipo'] == TipoToken.RETURN or self.preanalisis['tipo'] == TipoToken.WHILE or self.preanalisis['tipo'] == TipoToken.LEFT_BRACE:
             stmt = self.statement()
             statements.append(stmt)
             self.declaration(statements)
-            print(stmt)
-            return stmt
+            print(f'masarriba {stmt}')
+            #return stmt
         return statements
 
     # FUN_DECL -> fun FUNCTION
@@ -307,7 +307,9 @@ class ASDR:
         elif self.preanalisis['tipo'] == TipoToken.PRINT:
             return self.print_stmt()
         elif self.preanalisis['tipo'] == TipoToken.RETURN:
-            return self.return_stmt()
+            value = self.return_stmt()
+            print(f'Soy return {value}')
+            return value
         elif self.preanalisis['tipo'] == TipoToken.WHILE:
             return self.while_stmt()
         elif self.preanalisis['tipo'] == TipoToken.LEFT_BRACE:
@@ -428,6 +430,7 @@ class ASDR:
         if self.preanalisis['tipo'] == TipoToken.RETURN:
             self.coincidir(TipoToken.RETURN)
             value = self.return_exp_opc()
+            print(f'return_stmt {value}')
             self.coincidir(TipoToken.SEMICOLON)
             return StmtReturn(value)
         else:
@@ -459,9 +462,10 @@ class ASDR:
     def block(self):
         if self.preanalisis['tipo'] == TipoToken.LEFT_BRACE:
             self.coincidir(TipoToken.LEFT_BRACE)
-
+            for i in statements:
+                print(i)
             stmtb = StmtBlock(self.declaration(statements))
-            print(stmtb)
+            print(f'Soy un block {stmtb}')
             self.coincidir(TipoToken.RIGHT_BRACE)
             return stmtb
         else:
