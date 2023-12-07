@@ -202,7 +202,6 @@ class TipoToken:
 
     EOF = 'EOF'
 
-statements = []
 class ASDR:
 
     def __init__(self, tokens):
@@ -225,7 +224,8 @@ class ASDR:
     def program(self):
         statements = []
         value = self.declaration(statements)
-        print(f'Aqui {value[0]}')
+        for i in value:
+            print(f'Aqui {i}')
 
     #Declaraciones
     # DECLARATION -> FUN_DECL DECLARATION
@@ -462,10 +462,9 @@ class ASDR:
     def block(self):
         if self.preanalisis['tipo'] == TipoToken.LEFT_BRACE:
             self.coincidir(TipoToken.LEFT_BRACE)
-            for i in statements:
-                print(i)
-            stmtb = StmtBlock(self.declaration(statements))
-            print(f'Soy un block {stmtb}')
+            statementsb = []
+            stmtb = StmtBlock(self.declaration(statementsb))
+            print(f'Soy un block {statementsb}')
             self.coincidir(TipoToken.RIGHT_BRACE)
             return stmtb
         else:
@@ -712,9 +711,10 @@ class ASDR:
     #CALL_2 -> (ARGUMENTS_OPC) CALL_2
     #CALL_2 -> Ɛ
     def call_2(self, expr):
+        arguments = []
         if self.preanalisis['tipo'] == TipoToken.LEFT_PAREN:
             self.coincidir(TipoToken.LEFT_PAREN)
-            lstArguments = self.arguments_opc()
+            lstArguments = self.arguments_opc(arguments)
             self.coincidir(TipoToken.RIGHT_PAREN)
             ecf = ExprCallFunction(expr, lstArguments)
             return self.call_2(ecf)
@@ -769,9 +769,15 @@ class ASDR:
             self.coincidir(TipoToken.IDENTIFIER)
             id = self.previous()
             self.coincidir(TipoToken.LEFT_PAREN)
-            param = self.parameters_opc()
+            parameters = []
+            param = self.parameters_opc(parameters)
+            #parameters.append(param)
+            for i in parameters:
+                print(f'Elementos param {i}')
             self.coincidir(TipoToken.RIGHT_PAREN)
+            print(self.preanalisis['tipo'])
             body = self.block()
+            print(body)
             stmtf = StmtFunction(id['lexema'], param, body)
             return stmtf
         else:
@@ -787,51 +793,60 @@ class ASDR:
 
     #PARAMETERS_OPC -> PARAMETERS
     #PARAMETERS_OPC -> Ɛ
-    def parameters_opc(self):
+    def parameters_opc(self, parameters):
         if self.preanalisis['tipo'] == TipoToken.IDENTIFIER:
-            return self.parameters()
+            return self.parameters(parameters)
+        return parameters
 
     #PARAMETERS -> id PARAMETERS_2
-    def parameters(self):
+    def parameters(self, parameters):
         if self.preanalisis['tipo'] == TipoToken.IDENTIFIER:
             self.coincidir(TipoToken.IDENTIFIER)
             id = self.previous()
-            param2 = self.parameters_2(id['lexema'])
-            return ExprGrouping(str(param2))
+            parameters.append(id['lexema'])
+            parameters.extend(self.parameters_2())
         else:
             self.hayErrores = True
             print("Error, se esperaba un identificador.")
 
+        return parameters
+
     #PARAMETERS_2 -> , id PARAMETERS_2
     #PARAMETERS_2 -> Ɛ
-    def parameters_2(self, id):
+    def parameters_2(self):
+        aux = []
         if self.preanalisis['tipo'] == TipoToken.COMMA:
             self.coincidir(TipoToken.COMMA)
             self.coincidir(TipoToken.IDENTIFIER)
             id2 = self.previous()
-            param2 = self.parameters_2(str(id) + str(id2['lexema']))
-            return param2
+            aux.append(id2['lexema'])
+            aux.extend(self.parameters_2())
+            return aux
 
-        return id
+        return aux
 
 
     #ARGUMENTS_OPC -> EXPRESSION ARGUMENTS
     #ARGUMENTS_OPC -> Ɛ
-    def arguments_opc(self):
+    def arguments_opc(self, arguments):
         if self.preanalisis['tipo'] == TipoToken.BANG or self.preanalisis['tipo'] == TipoToken.MINUS or self.preanalisis['tipo'] == TipoToken.TRUE or self.preanalisis['tipo'] == TipoToken.FALSE or self.preanalisis['tipo'] == TipoToken.NULL or self.preanalisis['tipo']==TipoToken.NUMBER or self.preanalisis['tipo']==TipoToken.STRING or self.preanalisis['tipo']==TipoToken.IDENTIFIER or self.preanalisis['tipo'] == TipoToken.LEFT_PAREN:
             expr = self.expression()
-            arg = self.arguments(expr)
-            return ExprGrouping(str(arg))
+            arguments.append(expr)
+            arguments.extend(self.arguments())
+            return arguments
+        return arguments
 
     #ARGUMENTS -> , EXPRESSION ARGUMENTS
     #ARGUMENTS -> Ɛ
-    def arguments(self, expr):
+    def arguments(self):
+        aux = []
         if self.preanalisis['tipo'] == TipoToken.COMMA:
             self.coincidir(TipoToken.COMMA)
-            expr2 = self.expression()
-            arg = self.arguments(expr2)
-            return str(expr) + str(arg)
-        return expr
+            expr = self.expression()
+            aux.append(expr)
+            aux.extend(self.arguments())
+            return aux
+        return aux
 
     def coincidir(self, t):
         if self.hayErrores:
