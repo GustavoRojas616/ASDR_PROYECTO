@@ -803,7 +803,7 @@ class ASDR:
         if self.preanalisis['tipo'] == TipoToken.IDENTIFIER:
             self.coincidir(TipoToken.IDENTIFIER)
             id = self.previous()
-            parameters.append(id['lexema'])
+            parameters.append(ExprVariable(id['lexema']))
             parameters.extend(self.parameters_2())
         else:
             self.hayErrores = True
@@ -819,12 +819,11 @@ class ASDR:
             self.coincidir(TipoToken.COMMA)
             self.coincidir(TipoToken.IDENTIFIER)
             id2 = self.previous()
-            aux.append(id2['lexema'])
+            aux.append(ExprVariable(id2['lexema']))
             aux.extend(self.parameters_2())
             return aux
 
         return aux
-
 
     #ARGUMENTS_OPC -> EXPRESSION ARGUMENTS
     #ARGUMENTS_OPC -> Ɛ
